@@ -115,7 +115,7 @@ def generate_samples(netG):
     if use_cuda:
         noise = noise.cuda(gpu)
     with torch.no_grad():
-            noisev = noise.cuda()
+            noisev = noise#.cuda()
     samples = netG(noisev)
     samples = samples.view(-1, args.seq_length, len(charmap))
     # print samples.size()
@@ -147,12 +147,18 @@ torch.manual_seed(1)
 use_cuda = torch.cuda.is_available()
 if use_cuda:
     gpu = 0
+    
 
 netG = Generator()
 if use_cuda:
     netG = netG.cuda(gpu)
-# load weights
-netG.load_state_dict(torch.load('output/checkpoints/netG_epoch_200000.pth'))
+    # load weights
+    netG.load_state_dict(torch.load('output/checkpoints/netG_epoch_200000.pth'))
+
+else:
+    # load weights
+    netG.load_state_dict(torch.load('output/checkpoints/netG_epoch_200000.pth',map_location=torch.device('cpu')))
+
 
 
 def save(samples):
