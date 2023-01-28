@@ -202,7 +202,11 @@ def generate_samples(netG):
         noise = noise.cuda(gpu)
     # noisev = autograd.Variable(noise, volatile=True)
     with torch.no_grad():
-            noisev = noise.cuda()
+        if use_cuda:     
+           noisev = noise.cuda()
+        else:
+            noisev = noise
+
     samples = netG(noisev)
     samples = samples.view(-1, args.seq_length, len(charmap))
     # print samples.size()
@@ -264,7 +268,10 @@ for iteration in range(args.iters + 1):
             noise = noise.cuda(gpu)
 
         with torch.no_grad():
-            noisev = noise.cuda()
+            if use_cuda:
+                noisev = noise.cuda()
+            else:
+                noisev = noise
         fake = autograd.Variable(netG(noisev).data)
         
         pred_real = normalize_gradient(netC, real_data_v)   # net_D(x_real)
