@@ -78,6 +78,7 @@ args = parse_args()
 
 torch.manual_seed(1)
 use_cuda = torch.cuda.is_available()
+print(f"\n\nCuda Is Avaible {use_cuda}.\n\n")
 if use_cuda:
     gpu = 0
 
@@ -203,7 +204,8 @@ def generate_samples(netG):
     # noisev = autograd.Variable(noise, volatile=True)
     with torch.no_grad():
         if use_cuda:     
-           noisev = noise.cuda()
+            noisev = noise.cuda()
+            
         else:
             noisev = noise
 
@@ -232,6 +234,7 @@ loss_fn = BCEWithLogitsLoss()
 if use_cuda:
     netC = netC.cuda(gpu)
     netG = netG.cuda(gpu)
+    print("netC y netG usando cuda")
 
 optimizerC = optim.Adam(netC.parameters(), lr=1e-4, betas=(0.5, 0.9))
 optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.9))
@@ -323,8 +326,8 @@ for iteration in range(args.iters + 1):
             #         f.write(s + "\n")
 
     if iteration % args.save_every == 0 and iteration > 0:
-        torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % ('output/checkpoints/', iteration))
-        torch.save(netC.state_dict(), '%s/netD_epoch_%d.pth' % ('output/checkpoints/', iteration))
+        torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (f'{args.output_dir}/checkpoints/', iteration))
+        torch.save(netC.state_dict(), '%s/netD_epoch_%d.pth' % (f'{args.output_dir}/checkpoints/', iteration))
 
     if iteration == args.iters:
         print("...Training done.")
