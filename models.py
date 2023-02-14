@@ -202,10 +202,9 @@ def generate_samples(netG):
     if use_cuda:
         noise = noise.cuda(gpu)
     # noisev = autograd.Variable(noise, volatile=True)
-    with torch.no_grad():
+    with torch.no_grad(): #disabled gradient calculation
         if use_cuda:     
             noisev = noise.cuda()
-            
         else:
             noisev = noise
 
@@ -223,6 +222,7 @@ def generate_samples(netG):
             decoded.append(inv_charmap[samples[i][j]])
         decoded_samples.append(tuple(decoded))
     return decoded_samples
+
 # ==================Definition End======================
 
 netG = Generator()
@@ -262,9 +262,9 @@ for iteration in range(args.iters + 1):
         real_data = torch.Tensor(data_one_hot)
         if use_cuda:
             real_data = real_data.cuda(gpu)
-        real_data_v = autograd.Variable(real_data)
+        real_data_v = autograd.Variable(real_data) # packing the tensors with Variable
 
-        netC.zero_grad()
+        netC.zero_grad() #Sets the gradients of all optimized torch.Tensor s to zero ---> POR QUE?
 
         noise = torch.randn(args.batch_size, 128)
         if use_cuda:
@@ -275,7 +275,7 @@ for iteration in range(args.iters + 1):
                 noisev = noise.cuda()
             else:
                 noisev = noise
-        fake = autograd.Variable(netG(noisev).data)
+        fake = autograd.Variable(netG(noisev).data) # packing the tensors with Variable
         
         pred_real = normalize_gradient(netC, real_data_v)   # net_D(x_real)
         pred_fake = normalize_gradient(netC, fake)   # net_D(x_fake)
@@ -314,7 +314,7 @@ for iteration in range(args.iters + 1):
 
             samples = []
             for i in range(10):
-                samples.extend(generate_samples(netG))
+                samples.extend(generate_samples(netG)) #Genera 10 contraseñas
 
             for i in range(4):
                 lm = utils.NgramLanguageModel(i+1, samples, tokenize=False)

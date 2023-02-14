@@ -52,6 +52,12 @@ def parse_args():
                         dest='layer_dim',
                         help='The hidden layer dimensionality for the generator. Use the same value that you did for training (default: 128)')
     
+    parser.add_argument('--training-iters', '-ti',
+                        type=int,
+                        default=200000,
+                        dest='training_iters',
+                        help='The number of iters use for training the model.')
+    
     args = parser.parse_args()
 
     if not os.path.isdir(args.input_dir):
@@ -65,6 +71,7 @@ def parse_args():
         parser.error('charmap_inv.pickle doesn\'t exist in {}, are you sure that directory is a trained model directory'.format(args.input_dir))
 
     return args
+
 # ==================Definition Start======================
 class ResBlock(nn.Module):
 
@@ -132,6 +139,8 @@ def generate_samples(netG):
     return decoded_samples
 
 # ==================Definition End======================
+
+
 args = parse_args()
 # Dictionary
 with open(os.path.join(args.input_dir, 'charmap.pickle'), 'rb') as f:
@@ -153,11 +162,11 @@ netG = Generator()
 if use_cuda:
     netG = netG.cuda(gpu)
     # load weights
-    netG.load_state_dict(torch.load('output/checkpoints/netG_epoch_200000.pth'))
-
+    #netG.load_state_dict(torch.load('output/checkpoints/netG_epoch_200000.pth'))
+    netG.load_state_dict(torch.load(f'output/checkpoints/netG_epoch_{args.training_iters}.pth'))
 else:
     # load weights
-    netG.load_state_dict(torch.load('output/checkpoints/netG_epoch_200000.pth',map_location=torch.device('cpu')))
+    netG.load_state_dict(torch.load(f'output/checkpoints/netG_epoch_{args.training_iters}.pth',map_location=torch.device('cpu')))
 
 
 
