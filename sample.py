@@ -152,7 +152,8 @@ with open(os.path.join(args.input_dir, 'charmap_inv.pickle'), 'rb') as f:
 with open(os.path.join(args.input_dir, 'charmap.pickle'), 'rb') as f:
     charmap = pickle.load(f, encoding='latin1')
 
-torch.manual_seed(1)
+#torch.manual_seed(1)
+torch.manual_seed(2)
 use_cuda = torch.cuda.is_available()
 if use_cuda:
     gpu = 0
@@ -163,18 +164,21 @@ if use_cuda:
     netG = netG.cuda(gpu)
     # load weights
     #netG.load_state_dict(torch.load('output/checkpoints/netG_epoch_200000.pth'))
-    netG.load_state_dict(torch.load(f'output/checkpoints/netG_epoch_{args.training_iters}.pth'))
+    #netG.load_state_dict(torch.load(f'output/checkpoints/netG_epoch_{args.training_iters}.pth'))
+    netG.load_state_dict(torch.load(f'{args.input_dir}/checkpoints/netG_epoch_{args.training_iters}.pth'))
 else:
     # load weights
-    netG.load_state_dict(torch.load(f'output/checkpoints/netG_epoch_{args.training_iters}.pth',map_location=torch.device('cpu')))
+    netG.load_state_dict(torch.load(f'{args.input_dir}/checkpoints/netG_epoch_{args.training_iters}.pth',map_location=torch.device('cpu')))
 
-
+#print(netG)
 
 def save(samples):
-    with open(args.output, 'a') as f:
+    #with open(args.output, 'a','utf-8') as f:
+    with open(args.output, "a", encoding='utf-8') as f:
             for s in samples:
-                s = "".join(s).replace('`', '')
-                f.write(s + "\n")
+                s = "".join(s).replace('`', '') #Modificado porque da error la codificación si no se expecifica que es utf-8
+                s=(s + "\n")#.encode('utf-8')
+                f.write(s)
 
 
 samples = []

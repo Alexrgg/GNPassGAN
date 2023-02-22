@@ -146,7 +146,7 @@ class Generator(nn.Module):
         return output.view(shape) # (BATCH_SIZE, SEQ_LEN, len(charmap))
         
 
-class Critic(nn.Module):
+class Critic(nn.Module): #Discriminante
 
     def __init__(self):
         super(Critic, self).__init__()
