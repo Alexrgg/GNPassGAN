@@ -72,6 +72,13 @@ def parse_args():
                         default=10,
                         dest='critic_iters',
                         help='The number of discriminator weight updates per generator update (default: 10)')
+
+    parser.add_argument('--model', '-m',
+                        type=int,
+                        default='gnpassgan',
+                        dest='model_type',
+                        help='The model implementation use. Can be `PassGAN` or `GNPassGAN`')
+                        
     
     return parser.parse_args()
 args = parse_args()
@@ -178,23 +185,26 @@ def inf_train_gen():
                 dtype='int32'
             )
 
-def normalize_gradient(netC, x):
-    """
-                     f
-    f_hat = --------------------
-            || grad_f || + | f |
-    x: real_data_v
-    f: C_real before mean
-    
-    """
+def normalize_gradient(netC, x,model_type='gnpassgan'):
     x.requires_grad_(True)
     f = netC(x)
-    grad = torch.autograd.grad(
-        f, [x], torch.ones_like(f), create_graph=True, retain_graph=True)[0]
-    grad_norm = torch.norm(torch.flatten(grad, start_dim=1), p=2, dim=1)
-    grad_norm = grad_norm.view(-1, *[1 for _ in range(len(f.shape) - 1)]) 
-    f_hat = (f / (grad_norm + torch.abs(f)))
-    return f_hat
+        
+    if model_type=='gnpassgan':
+        """
+                        f
+        f_hat = --------------------
+                || grad_f || + | f |
+        x: real_data_v
+        f: C_real before mean
+        
+        """
+        grad = torch.autograd.grad(
+            f, [x], torch.ones_like(f), create_graph=True, retain_graph=True)[0]
+        grad_norm = torch.norm(torch.flatten(grad, start_dim=1), p=2, dim=1)
+        grad_norm = grad_norm.view(-1, *[1 for _ in range(len(f.shape) - 1)]) 
+        f_hat = (f / (grad_norm + torch.abs(f)))
+        return f_hat
+    return f
 
 
 def generate_samples(netG):
@@ -277,8 +287,8 @@ for iteration in range(args.iters + 1):
                 noisev = noise
         fake = autograd.Variable(netG(noisev).data) # packing the tensors with Variable
         
-        pred_real = normalize_gradient(netC, real_data_v)   # net_D(x_real)
-        pred_fake = normalize_gradient(netC, fake)   # net_D(x_fake)
+        pred_real = normalize_gradient(netC, real_data_v,model_type=args.model_type)   # net_D(x_real)
+        pred_fake = normalize_gradient(netC, fake,model_type=args.model_type)   # net_D(x_fake)
 
 
         loss_real = loss_fn(pred_real, torch.ones_like(pred_real))
@@ -299,7 +309,7 @@ for iteration in range(args.iters + 1):
         noise = noise.cuda(gpu)
     noisev = autograd.Variable(noise)
     fake = netG(noisev)
-    pred_fake = normalize_gradient(netC, fake)   # net_D(x_fake)
+    pred_fake = normalize_gradient(netC, fake,model_type=args.model_type)   # net_D(x_fake)
     loss_fake = loss_fn(pred_fake, torch.ones_like(pred_fake))
     loss_fake.backward() 
     optimizerG.step()
